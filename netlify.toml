@@ -1,10 +1,11 @@
-# netlify.toml (place at project root, only ONE [build] block)
 [build]
-  publish   = "."                # serve the current folder (your index.html/styles/app.js)
+  publish = "metar"
   functions = "netlify/functions"
 
 [dev]
-  publish = "."                  # same for `netlify dev`
+  publish = "metar"
 
-[functions]
-  node_bundler = "esbuild"
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
