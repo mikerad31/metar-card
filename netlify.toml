@@ -19,3 +19,12 @@
   #  publish = "dist" # Folder with the static content for _redirect file
 
   ## more info on configuring this file: https://ntl.fyi/file-based-build-config
+[build]
+  publish = "metar"
+  functions = "netlify/functions"
+
+[dev]            # netlify dev defaults
+  publish = "metar"
+
+[functions]
+  node_bundler = "esbuild"

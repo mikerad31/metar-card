@@ -1,40 +1,51 @@
-// netlify/functions/metar.js
-export default async (req, context) => {
-  const url = new URL(req.url);
-  const icao = (url.searchParams.get("icao") || "").toUpperCase();
+// netlify/functions/metar.js (CommonJS)
+exports.handler = async (event, context) => {
+  try {
+    const icao = (event.queryStringParameters?.icao || "").toUpperCase();
+    if (!/^[A-Z]{4}$/.test(icao)) {
+      return plain(400, "Invalid ICAO");
+    }
 
-  if (!/^[A-Z]{4}$/.test(icao)) {
-    return new Response("Invalid ICAO", { status: 400 });
-  }
+    // Optional key (https://checkwx.com)
+    const CHECKWX_API_KEY = process.env.CHECKWX_API_KEY;
 
-  // Optional paid/free keys (use if you have them)
-  const CHECKWX_API_KEY = context?.env?.CHECKWX_API_KEY; // https://checkwx.com
-  // const AVWX_API_KEY = context?.env?.AVWX_API_KEY;     // https://avwx.rest
+    // 1) Try CheckWX if key present
+    if (CHECKWX_API_KEY) {
+      try {
+        const r = await fetch(`https://api.checkwx.com/metar/${icao}?format=raw`, {
+          headers: { "X-API-Key": CHECKWX_API_KEY },
+        });
+        if (r.ok) {
+          const txt = (await r.text()).trim();
+          if (txt) return plain(200, txt);
+        }
+      } catch {}
+    }
 
-  // NOAA fallback (free)
-  const NOAA = `https://aviationweather.gov/api/data/metar?ids=${icao}&format=raw`;
-
-  // Try CheckWX if key provided
-  if (CHECKWX_API_KEY) {
+    // 2) NOAA fallback (free, best-effort)
+    const NOAA = `https://aviationweather.gov/api/data/metar?ids=${icao}&format=raw`;
     try {
-      const r = await fetch(`https://api.checkwx.com/metar/${icao}?format=raw`, {
-        headers: { "X-API-Key": CHECKWX_API_KEY },
-      });
+      const r = await fetch(NOAA, { headers: { "User-Agent": "metar-card" } });
       if (r.ok) {
         const txt = (await r.text()).trim();
-        if (txt) return new Response(txt, { status: 200 });
+        if (txt) return plain(200, txt);
       }
     } catch {}
+
+    return plain(502, "Unavailable");
+  } catch (err) {
+    return plain(500, "Server error");
   }
-
-  // Try NOAA (best-effort)
-  try {
-    const r = await fetch(NOAA, { headers: { "User-Agent": "metar-card" } });
-    if (r.ok) {
-      const txt = (await r.text()).trim();
-      if (txt) return new Response(txt, { status: 200 });
-    }
-  } catch {}
-
-  return new Response("Unavailable", { status: 502 });
 };
+
+function plain(statusCode, body) {
+  return {
+    statusCode,
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      // CORS: safe both locally and on Netlify
+      "Access-Control-Allow-Origin": "*",
+    },
+    body,
+  };
+}
