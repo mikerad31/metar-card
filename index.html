@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>METAR Card</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <!-- Keyboard users can jump straight to the content -->
+    <a href="#metar-title" class="skip">Skip to METAR card</a>
+
+    <main class="wrap">
+      <!-- Control UI state with this one attribute: ok | loading | error -->
+      <article
+        class="card"
+        aria-labelledby="metar-title"
+        data-state="ok"
+        aria-busy="false"
+      >
+        <!-- Header -->
+        <header class="card__header">
+          <h1 id="metar-title" class="icao" aria-label="Station ICAO">KJFK</h1>
+          <time
+            class="zulu"
+            datetime="2025-10-06T14:20:00Z"
+            aria-label="Zulu time"
+            >14:20Z</time
+          >
+        </header>
+
+        <form class="icao-form" aria-label="Station selector">
+          <label for="icao-input" class="sr-only">ICAO</label>
+          <input
+            id="icao-input"
+            name="icao"
+            inputmode="latin"
+            autocomplete="off"
+            autocapitalize="characters"
+            spellcheck="false"
+            maxlength="4"
+            placeholder="ICAO (e.g., KJFK)"
+            pattern="[A-Za-z]{4}"
+            aria-describedby="icao-help"
+            autofocus
+          />
+          <section class="favorites" aria-label="Favorite stations">
+            <div class="favorites__list" role="list"></div>
+          </section>
+          <button class="btn" type="submit" name="action" value="fetch">
+            Fetch
+          </button>
+          <small id="icao-help" class="muted">4 letters A–Z</small>
+          <p
+            id="icao-error"
+            class="field-error"
+            role="alert"
+            aria-live="polite"
+          ></p>
+        </form>
+
+        <!-- Raw METAR line -->
+        <section class="raw" aria-label="Raw METAR">
+          <!-- Make raw line focusable for keyboard selection/copy -->
+          <code class="raw__line" tabindex="0">
+            KJFK 061420Z 18010KT 10SM FEW030 18/10 A2992
+          </code>
+          <div class="raw__actions">
+            <button class="btn" type="button" aria-label="Copy METAR">
+              Copy
+            </button>
+            <button class="btn btn--ghost" type="button" aria-label="Refresh">
+              Refresh
+            </button>
+          </div>
+        </section>
+
+        <!-- Decoded grid (OK / default) -->
+        <section
+          id="decoded-grid-ok"
+          class="grid"
+          aria-label="Decoded conditions"
+        >
+          <div class="grid__item">
+            <h2 class="label">Wind</h2>
+            <p class="value">180° @ 10&nbsp;kt</p>
+          </div>
+          <div class="grid__item">
+            <h2 class="label">Visibility</h2>
+            <p class="value">10&nbsp;SM</p>
+          </div>
+          <div class="grid__item">
+            <h2 class="label">Clouds</h2>
+            <p class="value">FEW&nbsp;3,000&nbsp;ft</p>
+          </div>
+          <div class="grid__item">
+            <h2 class="label">Temp/Dew</h2>
+            <p class="value">18&nbsp;°C / 10&nbsp;°C</p>
+          </div>
+          <div class="grid__item">
+            <h2 class="label">Altimeter</h2>
+            <p class="value">
+              29.92&nbsp;<abbr title="inches of mercury">inHg</abbr>
+            </p>
+          </div>
+        </section>
+
+        <!-- Decoded grid (LOADING / skeleton) -->
+        <section
+          id="decoded-grid-loading"
+          class="grid"
+          aria-label="Decoded conditions loading"
+          aria-busy="true"
+        >
+          <div class="grid__item">
+            <h2 class="label">
+              <span class="skeleton skeleton--bar sm"></span>
+            </h2>
+            <p class="value"><span class="skeleton skeleton--bar lg"></span></p>
+          </div>
+          <div class="grid__item">
+            <h2 class="label">
+              <span class="skeleton skeleton--bar sm"></span>
+            </h2>
+            <p class="value"><span class="skeleton skeleton--bar md"></span></p>
+          </div>
+          <div class="grid__item">
+            <h2 class="label">
+              <span class="skeleton skeleton--bar sm"></span>
+            </h2>
+            <p class="value"><span class="skeleton skeleton--bar md"></span></p>
+          </div>
+          <div class="grid__item">
+            <h2 class="label">
+              <span class="skeleton skeleton--bar sm"></span>
+            </h2>
+            <p class="value"><span class="skeleton skeleton--bar md"></span></p>
+          </div>
+          <div class="grid__item">
+            <h2 class="label">
+              <span class="skeleton skeleton--bar sm"></span>
+            </h2>
+            <p class="value"><span class="skeleton skeleton--bar md"></span></p>
+          </div>
+        </section>
+
+        <!-- Decoded grid (ERROR) -->
+        <section
+          id="decoded-grid-error"
+          class="grid"
+          aria-label="Decoded conditions error"
+          role="alert"
+        >
+          <div class="grid__item grid__item--full">
+            <h2 class="label">Conditions</h2>
+            <p class="value value--err">
+              <span class="pill pill--err" title="Invalid ICAO">Error</span>
+              <span class="err-msg">Invalid ICAO</span>
+            </p>
+          </div>
+        </section>
+
+        <!-- Status row (announces state changes) -->
+        <footer class="status" aria-live="polite" role="status">
+          <span class="pill pill--ok" data-role="ok">OK</span>
+          <span class="pill pill--err" data-role="error">Error</span>
+          <span class="pill pill--warn" data-role="loading">Loading…</span>
+          <span class="muted" data-role="timestamp">Last updated 14:20Z</span>
+        </footer>
+      </article>
+    </main>
+    <script src="app.js" defer></script>
+  </body>
+</html>
