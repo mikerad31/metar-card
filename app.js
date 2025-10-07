@@ -264,6 +264,15 @@ function updateDecodedFromMetar(metar) {
       : '—';
 }
 
+async function fetchMetar(icao) {
+  const endpoint = "/.netlify/functions/metar?icao=" + encodeURIComponent(icao);
+  const r = await fetch(endpoint, { cache: "no-store" });
+  if (!r.ok) throw new Error("Live fetch failed");
+  const text = (await r.text()).trim();
+  const line = text.split("\n").find(l => /^(METAR|SPECI)\b/.test(l)) || text;
+  return line.trim();
+}
+
 // -----------------------------
 // Main refresh / copy actions
 // -----------------------------
@@ -293,22 +302,25 @@ async function refreshMetar(passedIcao) {
   setControlsDisabled(true);
 
   try {
-    const metar = await fetchMetarMock(candidate);
+  const metar = await fetchMetar(candidate);   // live
+  rawLine.textContent = metar;
+  updateDecodedFromMetar(metar);
+  setState("ok");
+  setTimestampNow();
+  saveLastIcao(candidate);
+  afterSuccessfulFetch?.(candidate);
+} catch (err) {
+  // graceful fallback to mock
+  try {
+    const metar = MOCK[candidate];
+    if (!metar) throw new Error("Invalid ICAO");
     rawLine.textContent = metar;
     updateDecodedFromMetar(metar);
-    setState('ok');
+    setState("ok");
     setTimestampNow();
-    saveLastIcao(candidate);
-    afterSuccessfulFetch(candidate);
-  } catch (err) {
-    setState('error');
-    showIcaoError(
-      err?.message === 'Invalid ICAO'
-        ? 'Station not found.'
-        : 'Network error. Try again.'
-    );
-  } finally {
-    setControlsDisabled(false);
+  } catch {
+    setState("error");
+    showIcaoError("Live data unavailable. Try again or use another station.");
   }
 }
 
