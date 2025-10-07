@@ -30,7 +30,7 @@
           >
         </header>
 
-        <form class="icao-form" aria-label="Station selector">
+        <form class="icao-form" aria-label="Station selector" novalidate>
           <label for="icao-input" class="sr-only">ICAO</label>
           <input
             id="icao-input"
@@ -48,9 +48,7 @@
           <section class="favorites" aria-label="Favorite stations">
             <div class="favorites__list" role="list"></div>
           </section>
-          <button class="btn" type="submit" name="action" value="fetch">
-            Fetch
-          </button>
+          <button id="fetch-btn" class="btn" type="submit" name="action" value="fetch">Fetch</button>
           <small id="icao-help" class="muted">4 letters A–Z</small>
           <p
             id="icao-error"
